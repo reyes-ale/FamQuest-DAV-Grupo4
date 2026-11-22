@@ -1,3 +1,303 @@
 # FamQuest API
 
+openapi: 3.0.3
+info:
+  title: FamQuest API
+  version: 1.0.0
+  description: |
+    API REST de FamQuest: los padres asignan tareas y los hijos ganan puntos por completarlas y asi canjear recompensas establecidas por los padres.
+    Flujo de tareas: pendientes cuando se crean, el hijo la completa y pasa a revisión, el padre la aprueba o la rechaza y despues se acuerdan las recompensas.
 
+servers:
+  - url: http://localhost:3000/famquest/v1
+
+tags:
+  - name: Sesión
+  - name: Padres
+  - name: Familias
+  - name: Hijos
+  - name: Tareas
+  - name: Desafíos
+
+paths:
+  # Sesiones
+  /sesiones:
+    post:
+      tags: [Sesión]
+      summary: Iniciar sesión (padre o hijo)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                correo: { type: string  }
+                contrasena: { type: string }
+      responses:
+        '200':
+          description: Inicio de sesion exitoso
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Usuario' }
+        '401':
+          description: Correo o contraseña incorrectos
+
+  # Padres
+  /padres:
+    post:
+      tags: [Padres]
+      summary: Registrar un padre
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Padre' }
+      responses:
+        '201':
+          description: Padre registrado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Padre' }
+        '400':
+          description: Datos invalidos
+
+  /padres/{idPadre}:
+    parameters:
+      - $ref: '#/components/parameters/IdPadre'
+    get:
+      tags: [Padres]
+      summary: Ver el perfil de un padre
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Padre' }
+        '404':
+          description: Padre no encontrado
+    put:
+      tags: [Padres]
+      summary: Actualizar el perfil de un padre
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Padre' }
+      responses:
+        '200':
+          description: Perfil actualizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Padre' }
+        '404':
+          description: Padre no encontrado
+
+   # Familias
+    /familias:
+    post:
+      tags: [Familias]
+      summary: Crear una familia
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Familia' }
+      responses:
+        '201':
+          description: Familia creada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Familia' }
+
+  /familias/{idFamilia}:
+    get:
+      tags: [Familias]
+      summary: Ver una familia
+      parameters:
+        - $ref: '#/components/parameters/IdFamilia'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Familia' }
+        '404':
+          description: Familia no encontrada
+
+  /familias/{idFamilia}/miembros:
+    post:
+      tags: [Familias]
+      summary: Agregar un miembro a la familia
+      parameters:
+        - $ref: '#/components/parameters/IdFamilia'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                idUsuario: { type: integer, example: 4 }
+      responses:
+        '201':
+          description: Miembro agregado
+        '404':
+          description: Familia o usuario no encontrado
+
+  /familias/{idFamilia}/miembros/{idUsuario}:
+    delete:
+      tags: [Familias]
+      summary: Eliminar un miembro de la familia
+      parameters:
+        - $ref: '#/components/parameters/IdFamilia'
+        - $ref: '#/components/parameters/IdUsuario'
+      responses:
+        '204':
+          description: Miembro eliminado
+        '404':
+          description: Familia o usuario no encontrado 
+
+  # Hijos
+  /familias/{idFamilia}/hijos:
+    parameters:
+      - $ref: '#/components/parameters/IdFamilia'
+    post:
+      tags: [Hijos]
+      summary: Crear el perfil de un hijo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Hijo' }
+      responses:
+        '201':
+          description: Perfil creado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Hijo' }
+        '400':
+          description: Datos inválidos
+    get:
+      tags: [Hijos]
+      summary: Listar los hijos de una familia
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Hijo' }
+
+  /hijos/{idHijo}:
+    parameters:
+      - $ref: '#/components/parameters/IdHijo'
+    get:
+      tags: [Hijos]
+      summary: Ver el perfil de un hijo
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Hijo' }
+        '404':
+          description: Hijo no encontrado
+    put:
+      tags: [Hijos]
+      summary: Editar el perfil de un hijo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Hijo' }
+      responses:
+        '200':
+          description: Perfil actualizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Hijo' }
+        '404':
+          description: Hijo no encontrado
+    delete:
+      tags: [Hijos]
+      summary: Eliminar el perfil de un hijo
+      responses:
+        '204':
+          description: Perfil eliminado
+        '404':
+          description: Hijo no encontrado
+
+          
+
+  components:
+    parameters:
+      IdUsuario:
+        name: idUsuario
+        in: path
+        required: true
+        schema: { type: integer }
+      IdPadre:
+        name: idPadre
+        in: path
+        required: true
+        schema: { type: integer }
+      IdFamilia:
+        name: idFamilia
+        in: path
+        required: true
+        schema: { type: integer }
+      IdHijo:
+        name: idHijo
+        in: path
+        required: true
+        schema: { type: integer }
+      IdTarea:
+        name: idTarea
+        in: path
+        required: true
+        schema: { type: integer }
+      IdDesafio:
+        name: idDesafio
+        in: path
+        required: true
+        schema: { type: integer }
+
+
+
+schemas:
+    # padre e hijo heredan de Usuario
+   Usuario:
+    type: object
+    properties:
+      idUsuario: { type: integer, readOnly: true}
+      nombre: { type: string }
+      correo: { type: string }
+      contrasena: { type: string, writeOnly: true  }
+      fechaRegistro: { type: string, format: date, readOnly: true }
+
+      Padre:
+      allOf:
+        - $ref: '#/components/schemas/Usuario'
+        - type: object
+          properties:
+            telefono: { type: string }
+
+    Hijo:
+      allOf:
+        - $ref: '#/components/schemas/Usuario'
+        - type: object
+          properties:
+            fechaNacimiento: { type: string, format: date }
+            puntosActuales: { type: integer }
+            experiencia: { type: integer }
+
+    Familia:
+      type: object
+      properties:
+        idFamilia: { type: integer, readOnly: true }
+        nombre: { type: string }
+        codigoInvitacion: { type: string }
+
+  
