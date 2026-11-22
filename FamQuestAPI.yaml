@@ -18,6 +18,11 @@ tags:
   - name: Hijos
   - name: Tareas
   - name: Desafíos
+  - name: Niveles
+  - name: Insignias
+  - name: Avatar
+  - name: Minijuegos
+  - name: Progreso
 
 paths:
   # Sesiones
@@ -32,7 +37,7 @@ paths:
             schema:
               type: object
               properties:
-                correo: { type: string  }
+                correo: { type: string }
                 contrasena: { type: string }
       responses:
         '200':
@@ -93,8 +98,8 @@ paths:
         '404':
           description: Padre no encontrado
 
-   # Familias
-    /familias:
+  # Familias
+  /familias:
     post:
       tags: [Familias]
       summary: Crear una familia
@@ -156,7 +161,7 @@ paths:
         '204':
           description: Miembro eliminado
         '404':
-          description: Familia o usuario no encontrado 
+          description: Familia o usuario no encontrado
 
   # Hijos
   /familias/{idFamilia}/hijos:
@@ -229,55 +234,231 @@ paths:
         '404':
           description: Hijo no encontrado
 
-          
+  # ==========================================================
+  # PARTE 3: Niveles, Insignias, Avatar, Minijuegos y Progreso
+  # ==========================================================
 
-  components:
+  # Niveles
+  /niveles:
+    get:
+      tags: [Niveles]
+      summary: Lista de niveles y puntos requeridos
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Nivel' }
+
+  # Insignias
+  /insignias:
+    get:
+      tags: [Insignias]
+      summary: Catálogo de insignias
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Insignia' }
+
+  /hijos/{idHijo}/insignias:
     parameters:
-      IdUsuario:
-        name: idUsuario
-        in: path
-        required: true
-        schema: { type: integer }
-      IdPadre:
-        name: idPadre
-        in: path
-        required: true
-        schema: { type: integer }
-      IdFamilia:
-        name: idFamilia
-        in: path
-        required: true
-        schema: { type: integer }
-      IdHijo:
-        name: idHijo
-        in: path
-        required: true
-        schema: { type: integer }
-      IdTarea:
-        name: idTarea
-        in: path
-        required: true
-        schema: { type: integer }
-      IdDesafio:
-        name: idDesafio
-        in: path
-        required: true
-        schema: { type: integer }
+      - $ref: '#/components/parameters/IdHijo'
+    get:
+      tags: [Insignias]
+      summary: Insignias obtenidas por un hijo, con su fecha
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/InsigniaObtenida' }
+        '404':
+          description: Hijo no encontrado
 
+  # Avatar
+  /hijos/{idHijo}/avatar:
+    parameters:
+      - $ref: '#/components/parameters/IdHijo'
+    get:
+      tags: [Avatar]
+      summary: Ver el avatar de un hijo
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Avatar' }
+        '404':
+          description: Hijo no encontrado
+    put:
+      tags: [Avatar]
+      summary: Personalizar el avatar de un hijo (color y accesorios)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Avatar' }
+      responses:
+        '200':
+          description: Avatar actualizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Avatar' }
+        '400':
+          description: Datos inválidos
+        '404':
+          description: Hijo no encontrado
 
+  # Minijuegos
+  /minijuegos:
+    get:
+      tags: [Minijuegos]
+      summary: Listar minijuegos según la edad
+      parameters:
+        - name: edad
+          in: query
+          required: false
+          description: Edad del hijo; devuelve solo los minijuegos adecuados para esa edad
+          schema: { type: integer, minimum: 1, example: 8 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Minijuego' }
+        '400':
+          description: Edad inválida
 
-schemas:
+  /minijuegos/{idMinijuego}:
+    parameters:
+      - $ref: '#/components/parameters/IdMinijuego'
+    get:
+      tags: [Minijuegos]
+      summary: Detalle de un minijuego
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Minijuego' }
+        '404':
+          description: Minijuego no encontrado
+
+  /minijuegos/{idMinijuego}/partidas:
+    parameters:
+      - $ref: '#/components/parameters/IdMinijuego'
+    post:
+      tags: [Minijuegos]
+      summary: Registrar el resultado de una partida; devuelve la bonificación
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PartidaNueva' }
+      responses:
+        '201':
+          description: Partida registrada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Partida' }
+        '400':
+          description: Datos inválidos
+        '404':
+          description: Minijuego o hijo no encontrado
+
+  /hijos/{idHijo}/partidas:
+    parameters:
+      - $ref: '#/components/parameters/IdHijo'
+    get:
+      tags: [Minijuegos]
+      summary: Historial de partidas de un hijo
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Partida' }
+        '404':
+          description: Hijo no encontrado
+
+  # Progreso
+  /hijos/{idHijo}/progreso:
+    parameters:
+      - $ref: '#/components/parameters/IdHijo'
+    get:
+      tags: [Progreso]
+      summary: Panel del padre con puntos, nivel, tareas e insignias de un hijo
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Progreso' }
+        '404':
+          description: Hijo no encontrado
+
+components:
+  parameters:
+    IdUsuario:
+      name: idUsuario
+      in: path
+      required: true
+      schema: { type: integer }
+    IdPadre:
+      name: idPadre
+      in: path
+      required: true
+      schema: { type: integer }
+    IdFamilia:
+      name: idFamilia
+      in: path
+      required: true
+      schema: { type: integer }
+    IdHijo:
+      name: idHijo
+      in: path
+      required: true
+      schema: { type: integer }
+    IdTarea:
+      name: idTarea
+      in: path
+      required: true
+      schema: { type: integer }
+    IdDesafio:
+      name: idDesafio
+      in: path
+      required: true
+      schema: { type: integer }
+    IdMinijuego:
+      name: idMinijuego
+      in: path
+      required: true
+      schema: { type: integer }
+
+  schemas:
     # padre e hijo heredan de Usuario
-   Usuario:
-    type: object
-    properties:
-      idUsuario: { type: integer, readOnly: true}
-      nombre: { type: string }
-      correo: { type: string }
-      contrasena: { type: string, writeOnly: true  }
-      fechaRegistro: { type: string, format: date, readOnly: true }
+    Usuario:
+      type: object
+      properties:
+        idUsuario: { type: integer, readOnly: true }
+        nombre: { type: string }
+        correo: { type: string }
+        contrasena: { type: string, writeOnly: true }
+        fechaRegistro: { type: string, format: date, readOnly: true }
 
-      Padre:
+    Padre:
       allOf:
         - $ref: '#/components/schemas/Usuario'
         - type: object
@@ -300,4 +481,78 @@ schemas:
         nombre: { type: string }
         codigoInvitacion: { type: string }
 
-  
+    # ---- Parte 3 ----
+    Nivel:
+      type: object
+      properties:
+        idNivel: { type: integer, readOnly: true, example: 2 }
+        nombre: { type: string, example: Aprendiz }
+        puntosRequeridos: { type: integer, example: 100 }
+
+    Insignia:
+      type: object
+      properties:
+        idInsignia: { type: integer, readOnly: true, example: 1 }
+        nombre: { type: string, example: Primera tarea }
+        descripcion: { type: string, example: Se obtiene al completar la primera tarea }
+        icono: { type: string, example: estrella.png }
+
+    InsigniaObtenida:
+      type: object
+      properties:
+        insignia: { $ref: '#/components/schemas/Insignia' }
+        fechaObtencion: { type: string, format: date, example: '2026-11-20' }
+
+    Avatar:
+      type: object
+      properties:
+        color: { type: string, example: azul }
+        accesorios:
+          type: array
+          items: { type: string }
+          example: [gorra, lentes]
+
+    Minijuego:
+      type: object
+      properties:
+        idMinijuego: { type: integer, readOnly: true, example: 1 }
+        nombre: { type: string, example: Memoria de colores }
+        descripcion: { type: string }
+        edadMinima: { type: integer, example: 5 }
+        edadMaxima: { type: integer, example: 10 }
+        bonificacionMaxima: { type: integer, example: 20 }
+
+    PartidaNueva:
+      type: object
+      required: [idHijo, puntaje]
+      properties:
+        idHijo: { type: integer, example: 3 }
+        puntaje: { type: integer, example: 85 }
+        duracionSegundos: { type: integer, example: 120 }
+
+    Partida:
+      type: object
+      properties:
+        idPartida: { type: integer, readOnly: true }
+        idMinijuego: { type: integer }
+        idHijo: { type: integer }
+        puntaje: { type: integer }
+        bonificacion: { type: integer, description: Puntos extra otorgados al hijo por la partida, example: 10 }
+        fecha: { type: string, format: date-time, readOnly: true }
+
+    Progreso:
+      type: object
+      properties:
+        idHijo: { type: integer }
+        puntosActuales: { type: integer }
+        nivel: { $ref: '#/components/schemas/Nivel' }
+        tareas:
+          type: object
+          properties:
+            pendientes: { type: integer }
+            enRevision: { type: integer }
+            aprobadas: { type: integer }
+            rechazadas: { type: integer }
+        insignias:
+          type: array
+          items: { $ref: '#/components/schemas/InsigniaObtenida' }
