@@ -234,9 +234,166 @@ paths:
         '404':
           description: Hijo no encontrado
 
-  # ==========================================================
-  # PARTE 3: Niveles, Insignias, Avatar, Minijuegos y Progreso
-  # ==========================================================
+  #Tareas
+   /hijos/{idHijo}/tareas:
+    parameters:
+      - $ref: '#/components/parameters/IdHijo'
+    post:
+      tags: [Tareas]
+      summary: Asignar una tarea a un hijo
+      description: La tarea se crea como pendiente.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Tarea' }
+      responses:
+        '201':
+          description: Tarea asignada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Tarea' }
+        '400':
+          description: Datos invalidos
+    get:
+      tags: [Tareas]
+      summary: Ver las tareas de un hijo
+      parameters:
+        - name: estado
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/EstadoTarea' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Tarea' }
+
+  /tareas/{idTarea}:
+    parameters:
+      - $ref: '#/components/parameters/IdTarea'
+    get:
+      tags: [Tareas]
+      summary: Ver una tarea
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Tarea' }
+        '404':
+          description: Tarea no encontrada
+    put:
+      tags: [Tareas]
+      summary: Editar una tarea
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Tarea' }
+      responses:
+        '200':
+          description: Tarea actualizada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Tarea' }
+        '404':
+          description: Tarea no encontrada
+    patch:
+      tags: [Tareas]
+      summary: Cambiar el estado de una tarea (completada, aprobada o rechazada)
+      description: |
+        - El hijo la complet, pasa a revision con evidencia.
+        - El padre la aprueba se le suman  puntos al hijo.
+        - El padre la rechaza y coloca comentario.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                estado: { $ref: '#/components/schemas/EstadoTarea' }
+                evidencia: { type: string }
+                comentario: { type: string }
+            examples:
+              completar:
+                summary: El hijo la completa
+                value: { estado: EN_REVISION, evidencia: foto-platos.jpg }
+              aprobar:
+                summary: El padre la aprueba
+                value: { estado: APROBADA }
+              rechazar:
+                summary: El padre la rechaza
+                value: { estado: RECHAZADA, comentario: Falto secar vasos }
+      responses:
+        '200':
+          description: Estado actualizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Tarea' }
+        '404':
+          description: Tarea no encontrada
+    delete:
+      tags: [Tareas]
+      summary: Eliminar una tarea
+      responses:
+        '204':
+          description: Tarea eliminada
+        '404':
+          description: Tarea no encontrada
+
+  #Desafios
+  /hijos/{idHijo}/desafios:
+    parameters:
+      - $ref: '#/components/parameters/IdHijo'
+    post:
+      tags: [Desafíos]
+      summary: Crear un desafio para un hijo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Desafio' }
+      responses:
+        '201':
+          description: Desafío creado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Desafio' }
+        '400':
+          description: Datos invalidos
+    get:
+      tags: [Desafíos]
+      summary: Ver los desafios de un hijo
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Desafio' }
+
+  /desafios/{idDesafio}:
+    get:
+      tags: [Desafíos]
+      summary: Ver un desafío
+      parameters:
+        - $ref: '#/components/parameters/IdDesafio'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Desafio' }
+        '404':
+          description: Desafio no encontrado
+
+
 
   # Niveles
   /niveles:
@@ -488,10 +645,10 @@ components:
         titulo: { type: string}
         descripcion: { type: string }
         fechaLimite: { type: string, format: date }
-        puntos: { type: integer, example: 20 }
+        puntos: { type: integer }
         tipo: { $ref: '#/components/schemas/TipoTarea' }
         estado: { $ref: '#/components/schemas/EstadoTarea' }
-        evidencia: { type: string, example: foto-platos.jpg }
+        evidencia: { type: string }
 
     # Desafio hereda de Tarea
     Desafio:
