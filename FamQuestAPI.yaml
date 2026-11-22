@@ -481,6 +481,37 @@ components:
         nombre: { type: string }
         codigoInvitacion: { type: string }
 
+    Tarea:
+      type: object
+      properties:
+        idTarea: { type: integer, readOnly: true }
+        titulo: { type: string}
+        descripcion: { type: string }
+        fechaLimite: { type: string, format: date }
+        puntos: { type: integer, example: 20 }
+        tipo: { $ref: '#/components/schemas/TipoTarea' }
+        estado: { $ref: '#/components/schemas/EstadoTarea' }
+        evidencia: { type: string, example: foto-platos.jpg }
+
+    # Desafio hereda de Tarea
+    Desafio:
+      allOf:
+        - $ref: '#/components/schemas/Tarea'
+        - type: object
+          properties:
+            periodicidad: { type: string }
+            puntosBonus: { type: integer }
+            fechaInicio: { type: string, format: date }
+            fechaFin: { type: string, format: date }
+
+    TipoTarea:
+      type: string
+      enum: [HOGAR, EDUCATIVA]
+
+    EstadoTarea:
+      type: string
+      enum: [PENDIENTE, EN_REVISION, APROBADA, RECHAZADA, VENCIDA]
+
     # ---- Parte 3 ----
     Nivel:
       type: object
