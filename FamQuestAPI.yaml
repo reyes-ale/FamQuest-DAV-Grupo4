@@ -402,7 +402,7 @@ paths:
     post:
       tags: [Recompensas]
       summary: Crear una recompensa
-      description: El padre crea una recompensa para sus hijos.
+      description: 'Padre.crearRecompensa(r). La recompensa se crea como disponible.'
       requestBody:
         required: true
         content:
@@ -416,9 +416,12 @@ paths:
               schema: { $ref: '#/components/schemas/Recompensa' }
         '400':
           description: Datos inválidos
+        '404':
+          description: Padre no encontrado
     get:
       tags: [Recompensas]
-      summary: Listar las recompensas creadas por un padre
+      summary: Ver las recompensas que creó un padre
+      description: El hijo usa esta ruta para ver lo que puede canjear (?disponible=true).
       parameters:
         - name: disponible
           in: query
@@ -466,6 +469,7 @@ paths:
     patch:
       tags: [Recompensas]
       summary: Activar o desactivar una recompensa
+      description: 'Recompensa.activar() / Recompensa.desactivar()'
       requestBody:
         required: true
         content:
@@ -505,7 +509,9 @@ paths:
     post:
       tags: [Canjes]
       summary: Canjear una recompensa
-      description: El hijo canjea una recompensa y se le descuentan los puntos.
+      description: |
+        Hijo.canjearRecompensa(r): Canje.
+        Se descuentan los puntos al hijo y el canje queda como PENDIENTE_ENTREGA.
       requestBody:
         required: true
         content:
@@ -544,12 +550,23 @@ paths:
                 items: { $ref: '#/components/schemas/Canje' }
 
   /canjes/{idCanje}:
+    parameters:
+      - $ref: '#/components/parameters/IdCanje'
+    get:
+      tags: [Canjes]
+      summary: Ver un canje
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Canje' }
+        '404':
+          description: Canje no encontrado
     patch:
       tags: [Canjes]
       summary: Confirmar la entrega de una recompensa
-      description: El padre confirma que entregó la recompensa al hijo.
-      parameters:
-        - $ref: '#/components/parameters/IdCanje'
+      description: 'Canje.confirmarEntrega(). El padre confirma que entregó la recompensa.'
       requestBody:
         required: true
         content:
@@ -804,7 +821,6 @@ components:
       schema: { type: integer }
 
   schemas:
-    # ---- Parte 1 ----
     # Padre e Hijo heredan de Usuario
     Usuario:
       type: object
@@ -869,7 +885,7 @@ components:
       type: string
       enum: [PENDIENTE, EN_REVISION, APROBADA, RECHAZADA, VENCIDA]
 
-    # ---- Parte 2 ----
+
     Recompensa:
       type: object
       properties:
@@ -886,12 +902,14 @@ components:
         fechaCanje: { type: string, format: date }
         puntosGastados: { type: integer }
         estado: { $ref: '#/components/schemas/EstadoCanje' }
+        # Relación "corresponde a" del diagrama: la recompensa que se canjeó
+        recompensa: { $ref: '#/components/schemas/Recompensa' }
 
     EstadoCanje:
       type: string
       enum: [PENDIENTE_ENTREGA, ENTREGADO]
 
-    # ---- Parte 3 ----
+
     Nivel:
       type: object
       properties:
