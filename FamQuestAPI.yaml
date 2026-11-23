@@ -23,6 +23,9 @@ tags:
   - name: Avatar
   - name: Minijuegos
   - name: Progreso
+  - name: Recompensas
+  - name: Canjes
+  - name: Notificaciones
 
 paths:
   # Sesiones
@@ -233,6 +236,260 @@ paths:
           description: Perfil eliminado
         '404':
           description: Hijo no encontrado
+
+
+  # ==========================================================
+  # PARTE 2: Recompensas, Canjes y Notificaciones
+  # ==========================================================
+
+  # Recompensas
+  /recompensas:
+    post:
+      tags: [Recompensas]
+      summary: Crear una recompensa
+      description: El padre crea una recompensa para sus hijos.
+      operationId: crearRecompensa
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecompensaInput'
+      responses:
+        '201':
+          description: Recompensa creada correctamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recompensa'
+        '400':
+          description: Datos inválidos.
+
+    get:
+      tags: [Recompensas]
+      summary: Listar recompensas disponibles
+      description: Permite consultar las recompensas disponibles.
+      operationId: listarRecompensas
+      responses:
+        '200':
+          description: Lista de recompensas.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recompensa'
+
+  /recompensas/{idRecompensa}:
+    parameters:
+      - name: idRecompensa
+        in: path
+        required: true
+        description: Identificador de la recompensa.
+        schema:
+          type: integer
+          example: 1
+    get:
+      tags: [Recompensas]
+      summary: Consultar una recompensa
+      operationId: obtenerRecompensa
+      responses:
+        '200':
+          description: Recompensa encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recompensa'
+        '404':
+          description: Recompensa no encontrada.
+
+    put:
+      tags: [Recompensas]
+      summary: Actualizar una recompensa
+      operationId: actualizarRecompensa
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecompensaInput'
+      responses:
+        '200':
+          description: Recompensa actualizada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recompensa'
+        '400':
+          description: Datos inválidos.
+        '404':
+          description: Recompensa no encontrada.
+
+    delete:
+      tags: [Recompensas]
+      summary: Eliminar una recompensa
+      operationId: eliminarRecompensa
+      responses:
+        '204':
+          description: Recompensa eliminada correctamente.
+        '404':
+          description: Recompensa no encontrada.
+
+  /recompensas/{idRecompensa}/activar:
+    patch:
+      tags: [Recompensas]
+      summary: Activar una recompensa
+      operationId: activarRecompensa
+      parameters:
+        - name: idRecompensa
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Recompensa activada.
+        '404':
+          description: Recompensa no encontrada.
+
+  /recompensas/{idRecompensa}/desactivar:
+    patch:
+      tags: [Recompensas]
+      summary: Desactivar una recompensa
+      operationId: desactivarRecompensa
+      parameters:
+        - name: idRecompensa
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Recompensa desactivada.
+        '404':
+          description: Recompensa no encontrada.
+
+  # Canjes
+  /canjes:
+    post:
+      tags: [Canjes]
+      summary: Canjear una recompensa
+      description: El hijo canjea una recompensa y se descuentan los puntos necesarios.
+      operationId: crearCanje
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - idRecompensa
+              properties:
+                idRecompensa:
+                  type: integer
+                  example: 1
+      responses:
+        '201':
+          description: Canje realizado correctamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Canje'
+        '400':
+          description: La recompensa no está disponible.
+        '404':
+          description: Recompensa no encontrada.
+        '409':
+          description: El hijo no tiene suficientes puntos.
+
+    get:
+      tags: [Canjes]
+      summary: Consultar historial de canjes
+      operationId: listarCanjes
+      parameters:
+        - name: idHijo
+          in: query
+          required: false
+          description: Filtrar canjes por hijo.
+          schema:
+            type: integer
+        - name: estado
+          in: query
+          required: false
+          description: Filtrar canjes por estado.
+          schema:
+            $ref: '#/components/schemas/EstadoCanje'
+      responses:
+        '200':
+          description: Historial de canjes.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Canje'
+
+  /canjes/{idCanje}/confirmar-entrega:
+    patch:
+      tags: [Canjes]
+      summary: Confirmar entrega de recompensa
+      description: El padre confirma que entregó la recompensa al hijo.
+      operationId: confirmarEntregaCanje
+      parameters:
+        - name: idCanje
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Entrega confirmada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Canje'
+        '404':
+          description: Canje no encontrado.
+        '409':
+          description: El canje ya fue entregado.
+
+  # Notificaciones
+  /notificaciones:
+    get:
+      tags: [Notificaciones]
+      summary: Consultar notificaciones
+      description: Consultar alertas relacionadas con tareas y recompensas.
+      operationId: listarNotificaciones
+      responses:
+        '200':
+          description: Lista de notificaciones.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notificacion'
+
+  /notificaciones/{idNotificacion}/leida:
+    patch:
+      tags: [Notificaciones]
+      summary: Marcar una notificación como leída
+      operationId: marcarNotificacionLeida
+      parameters:
+        - name: idNotificacion
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Notificación marcada como leída.
+        '404':
+          description: Notificación no encontrada.
 
   # ==========================================================
   # PARTE 3: Niveles, Insignias, Avatar, Minijuegos y Progreso
@@ -511,6 +768,102 @@ components:
     EstadoTarea:
       type: string
       enum: [PENDIENTE, EN_REVISION, APROBADA, RECHAZADA, VENCIDA]
+
+
+    # ---- Parte 2: Recompensas, Canjes y Notificaciones ----
+
+    Recompensa:
+      type: object
+      properties:
+        idRecompensa:
+          type: integer
+          readOnly: true
+          example: 1
+        nombre:
+          type: string
+          example: Una salida al cine
+        descripcion:
+          type: string
+          example: Salida al cine el fin de semana
+        costoPuntos:
+          type: integer
+          example: 100
+        activa:
+          type: boolean
+          example: true
+        idPadre:
+          type: integer
+          example: 1
+
+    RecompensaInput:
+      type: object
+      required:
+        - nombre
+        - descripcion
+        - costoPuntos
+      properties:
+        nombre:
+          type: string
+          example: Una salida al cine
+        descripcion:
+          type: string
+          example: Salida al cine el fin de semana
+        costoPuntos:
+          type: integer
+          minimum: 1
+          example: 100
+
+    Canje:
+      type: object
+      properties:
+        idCanje:
+          type: integer
+          readOnly: true
+          example: 1
+        idHijo:
+          type: integer
+          example: 2
+        idRecompensa:
+          type: integer
+          example: 1
+        fechaCanje:
+          type: string
+          format: date-time
+        estado:
+          $ref: '#/components/schemas/EstadoCanje'
+
+    EstadoCanje:
+      type: string
+      enum:
+        - PENDIENTE_ENTREGA
+        - ENTREGADO
+      example: PENDIENTE_ENTREGA
+
+    Notificacion:
+      type: object
+      properties:
+        idNotificacion:
+          type: integer
+          readOnly: true
+          example: 1
+        idUsuario:
+          type: integer
+          example: 2
+        mensaje:
+          type: string
+          example: Has conseguido una nueva recompensa
+        tipo:
+          type: string
+          enum:
+            - TAREA
+            - RECOMPENSA
+          example: RECOMPENSA
+        fecha:
+          type: string
+          format: date-time
+        leida:
+          type: boolean
+          example: false
 
     # ---- Parte 3 ----
     Nivel:
