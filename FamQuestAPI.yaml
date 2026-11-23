@@ -5,8 +5,8 @@ info:
   title: FamQuest API
   version: 1.0.0
   description: |
-    API REST de FamQuest: los padres asignan tareas y los hijos ganan puntos por completarlas y asi canjear recompensas establecidas por los padres.
-    Flujo de tareas: pendientes cuando se crean, el hijo la completa y pasa a revisión, el padre la aprueba o la rechaza y despues se acuerdan las recompensas.
+    API REST de FamQuest: los padres asignan tareas y los hijos ganan puntos por completarlas y así canjear recompensas establecidas por los padres.
+    Flujo de tareas: pendientes cuando se crean, el hijo la completa y pasa a revisión, el padre la aprueba o la rechaza y después se acuerdan las recompensas.
 
 servers:
   - url: http://localhost:3000/famquest/v1
@@ -18,6 +18,8 @@ tags:
   - name: Hijos
   - name: Tareas
   - name: Desafíos
+  - name: Recompensas
+  - name: Canjes
   - name: Niveles
   - name: Insignias
   - name: Avatar
@@ -41,7 +43,7 @@ paths:
                 contrasena: { type: string }
       responses:
         '200':
-          description: Inicio de sesion exitoso
+          description: Inicio de sesión exitoso
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Usuario' }
@@ -65,7 +67,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Padre' }
         '400':
-          description: Datos invalidos
+          description: Datos inválidos
 
   /padres/{idPadre}:
     parameters:
@@ -234,8 +236,8 @@ paths:
         '404':
           description: Hijo no encontrado
 
-  #Tareas
-   /hijos/{idHijo}/tareas:
+  # Tareas
+  /hijos/{idHijo}/tareas:
     parameters:
       - $ref: '#/components/parameters/IdHijo'
     post:
@@ -254,7 +256,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Tarea' }
         '400':
-          description: Datos invalidos
+          description: Datos inválidos
     get:
       tags: [Tareas]
       summary: Ver las tareas de un hijo
@@ -306,9 +308,9 @@ paths:
       tags: [Tareas]
       summary: Cambiar el estado de una tarea (completada, aprobada o rechazada)
       description: |
-        - El hijo la complet, pasa a revision con evidencia.
-        - El padre la aprueba se le suman  puntos al hijo.
-        - El padre la rechaza y coloca comentario.
+        - El hijo la completa y pasa a revisión con evidencia.
+        - El padre la aprueba y se le suman los puntos al hijo.
+        - El padre la rechaza y coloca un comentario.
       requestBody:
         required: true
         content:
@@ -328,7 +330,7 @@ paths:
                 value: { estado: APROBADA }
               rechazar:
                 summary: El padre la rechaza
-                value: { estado: RECHAZADA, comentario: Falto secar vasos }
+                value: { estado: RECHAZADA, comentario: Faltó secar los vasos }
       responses:
         '200':
           description: Estado actualizado
@@ -346,13 +348,13 @@ paths:
         '404':
           description: Tarea no encontrada
 
-  #Desafios
+  # Desafíos
   /hijos/{idHijo}/desafios:
     parameters:
       - $ref: '#/components/parameters/IdHijo'
     post:
       tags: [Desafíos]
-      summary: Crear un desafio para un hijo
+      summary: Crear un desafío para un hijo
       requestBody:
         required: true
         content:
@@ -365,10 +367,10 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Desafio' }
         '400':
-          description: Datos invalidos
+          description: Datos inválidos
     get:
       tags: [Desafíos]
-      summary: Ver los desafios de un hijo
+      summary: Ver los desafíos de un hijo
       responses:
         '200':
           description: OK
@@ -391,9 +393,182 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Desafio' }
         '404':
-          description: Desafio no encontrado
+          description: Desafío no encontrado
 
+  # Recompensas
+  /padres/{idPadre}/recompensas:
+    parameters:
+      - $ref: '#/components/parameters/IdPadre'
+    post:
+      tags: [Recompensas]
+      summary: Crear una recompensa
+      description: El padre crea una recompensa para sus hijos.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Recompensa' }
+      responses:
+        '201':
+          description: Recompensa creada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Recompensa' }
+        '400':
+          description: Datos inválidos
+    get:
+      tags: [Recompensas]
+      summary: Listar las recompensas creadas por un padre
+      parameters:
+        - name: disponible
+          in: query
+          required: false
+          schema: { type: boolean }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Recompensa' }
 
+  /recompensas/{idRecompensa}:
+    parameters:
+      - $ref: '#/components/parameters/IdRecompensa'
+    get:
+      tags: [Recompensas]
+      summary: Ver una recompensa
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Recompensa' }
+        '404':
+          description: Recompensa no encontrada
+    put:
+      tags: [Recompensas]
+      summary: Editar una recompensa
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Recompensa' }
+      responses:
+        '200':
+          description: Recompensa actualizada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Recompensa' }
+        '404':
+          description: Recompensa no encontrada
+    patch:
+      tags: [Recompensas]
+      summary: Activar o desactivar una recompensa
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                disponible: { type: boolean }
+            examples:
+              activar:
+                summary: Activar
+                value: { disponible: true }
+              desactivar:
+                summary: Desactivar
+                value: { disponible: false }
+      responses:
+        '200':
+          description: Recompensa actualizada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Recompensa' }
+        '404':
+          description: Recompensa no encontrada
+    delete:
+      tags: [Recompensas]
+      summary: Eliminar una recompensa
+      responses:
+        '204':
+          description: Recompensa eliminada
+        '404':
+          description: Recompensa no encontrada
+
+  # Canjes
+  /hijos/{idHijo}/canjes:
+    parameters:
+      - $ref: '#/components/parameters/IdHijo'
+    post:
+      tags: [Canjes]
+      summary: Canjear una recompensa
+      description: El hijo canjea una recompensa y se le descuentan los puntos.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                idRecompensa: { type: integer, example: 1 }
+      responses:
+        '201':
+          description: Canje realizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Canje' }
+        '400':
+          description: La recompensa no está disponible
+        '404':
+          description: Hijo o recompensa no encontrado
+        '409':
+          description: El hijo no tiene suficientes puntos
+    get:
+      tags: [Canjes]
+      summary: Ver el historial de canjes de un hijo
+      parameters:
+        - name: estado
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/EstadoCanje' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Canje' }
+
+  /canjes/{idCanje}:
+    patch:
+      tags: [Canjes]
+      summary: Confirmar la entrega de una recompensa
+      description: El padre confirma que entregó la recompensa al hijo.
+      parameters:
+        - $ref: '#/components/parameters/IdCanje'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                estado: { $ref: '#/components/schemas/EstadoCanje' }
+            example: { estado: ENTREGADO }
+      responses:
+        '200':
+          description: Entrega confirmada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Canje' }
+        '404':
+          description: Canje no encontrado
+        '409':
+          description: El canje ya fue entregado
 
   # Niveles
   /niveles:
@@ -483,8 +658,7 @@ paths:
         - name: edad
           in: query
           required: false
-          description: Edad del hijo; devuelve solo los minijuegos adecuados para esa edad
-          schema: { type: integer, minimum: 1, example: 8 }
+          schema: { type: integer }
       responses:
         '200':
           description: OK
@@ -501,7 +675,7 @@ paths:
       - $ref: '#/components/parameters/IdMinijuego'
     get:
       tags: [Minijuegos]
-      summary: Detalle de un minijuego
+      summary: Ver un minijuego
       responses:
         '200':
           description: OK
@@ -516,18 +690,23 @@ paths:
       - $ref: '#/components/parameters/IdMinijuego'
     post:
       tags: [Minijuegos]
-      summary: Registrar el resultado de una partida; devuelve la bonificación
+      summary: Registrar el resultado de una partida
+      description: Devuelve la partida con la bonificación que ganó el hijo.
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/PartidaNueva' }
+            schema:
+              type: object
+              properties:
+                idHijo: { type: integer, example: 5 }
+                puntaje: { type: integer, example: 85 }
       responses:
         '201':
           description: Partida registrada
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Partida' }
+              schema: { $ref: '#/components/schemas/PartidaMinijuego' }
         '400':
           description: Datos inválidos
         '404':
@@ -546,7 +725,7 @@ paths:
             application/json:
               schema:
                 type: array
-                items: { $ref: '#/components/schemas/Partida' }
+                items: { $ref: '#/components/schemas/PartidaMinijuego' }
         '404':
           description: Hijo no encontrado
 
@@ -556,13 +735,23 @@ paths:
       - $ref: '#/components/parameters/IdHijo'
     get:
       tags: [Progreso]
-      summary: Panel del padre con puntos, nivel, tareas e insignias de un hijo
+      summary: Consultar el progreso de un hijo (puntos, nivel, tareas e insignias)
       responses:
         '200':
           description: OK
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Progreso' }
+              schema:
+                type: object
+                properties:
+                  hijo: { $ref: '#/components/schemas/Hijo' }
+                  nivel: { $ref: '#/components/schemas/Nivel' }
+                  tareas:
+                    type: array
+                    items: { $ref: '#/components/schemas/Tarea' }
+                  insignias:
+                    type: array
+                    items: { $ref: '#/components/schemas/InsigniaObtenida' }
         '404':
           description: Hijo no encontrado
 
@@ -598,6 +787,16 @@ components:
       in: path
       required: true
       schema: { type: integer }
+    IdRecompensa:
+      name: idRecompensa
+      in: path
+      required: true
+      schema: { type: integer }
+    IdCanje:
+      name: idCanje
+      in: path
+      required: true
+      schema: { type: integer }
     IdMinijuego:
       name: idMinijuego
       in: path
@@ -605,7 +804,8 @@ components:
       schema: { type: integer }
 
   schemas:
-    # padre e hijo heredan de Usuario
+    # ---- Parte 1 ----
+    # Padre e Hijo heredan de Usuario
     Usuario:
       type: object
       properties:
@@ -642,7 +842,7 @@ components:
       type: object
       properties:
         idTarea: { type: integer, readOnly: true }
-        titulo: { type: string}
+        titulo: { type: string }
         descripcion: { type: string }
         fechaLimite: { type: string, format: date }
         puntos: { type: integer }
@@ -669,78 +869,75 @@ components:
       type: string
       enum: [PENDIENTE, EN_REVISION, APROBADA, RECHAZADA, VENCIDA]
 
+    # ---- Parte 2 ----
+    Recompensa:
+      type: object
+      properties:
+        idRecompensa: { type: integer, readOnly: true }
+        nombre: { type: string }
+        descripcion: { type: string }
+        costoPuntos: { type: integer }
+        disponible: { type: boolean }
+
+    Canje:
+      type: object
+      properties:
+        idCanje: { type: integer, readOnly: true }
+        fechaCanje: { type: string, format: date }
+        puntosGastados: { type: integer }
+        estado: { $ref: '#/components/schemas/EstadoCanje' }
+
+    EstadoCanje:
+      type: string
+      enum: [PENDIENTE_ENTREGA, ENTREGADO]
+
     # ---- Parte 3 ----
     Nivel:
       type: object
       properties:
-        idNivel: { type: integer, readOnly: true, example: 2 }
-        nombre: { type: string, example: Aprendiz }
-        puntosRequeridos: { type: integer, example: 100 }
+        numero: { type: integer }
+        nombre: { type: string }
+        puntosRequeridos: { type: integer }
 
     Insignia:
       type: object
       properties:
-        idInsignia: { type: integer, readOnly: true, example: 1 }
-        nombre: { type: string, example: Primera tarea }
-        descripcion: { type: string, example: Se obtiene al completar la primera tarea }
-        icono: { type: string, example: estrella.png }
+        idInsignia: { type: integer, readOnly: true }
+        nombre: { type: string }
+        descripcion: { type: string }
+        icono: { type: string }
+        criterio: { type: string }
 
+    # Relaciona a un Hijo con la Insignia que ganó
     InsigniaObtenida:
       type: object
       properties:
         insignia: { $ref: '#/components/schemas/Insignia' }
-        fechaObtencion: { type: string, format: date, example: '2026-11-20' }
+        fechaObtencion: { type: string, format: date }
 
     Avatar:
       type: object
       properties:
-        color: { type: string, example: azul }
+        idAvatar: { type: integer, readOnly: true }
+        imagenBase: { type: string }
+        color: { type: string }
         accesorios:
           type: array
           items: { type: string }
-          example: [gorra, lentes]
 
     Minijuego:
       type: object
       properties:
-        idMinijuego: { type: integer, readOnly: true, example: 1 }
-        nombre: { type: string, example: Memoria de colores }
-        descripcion: { type: string }
-        edadMinima: { type: integer, example: 5 }
-        edadMaxima: { type: integer, example: 10 }
-        bonificacionMaxima: { type: integer, example: 20 }
+        idMinijuego: { type: integer, readOnly: true }
+        nombre: { type: string }
+        categoria: { type: string }
+        edadMinima: { type: integer }
+        edadMaxima: { type: integer }
+        puntosBonus: { type: integer }
 
-    PartidaNueva:
-      type: object
-      required: [idHijo, puntaje]
-      properties:
-        idHijo: { type: integer, example: 3 }
-        puntaje: { type: integer, example: 85 }
-        duracionSegundos: { type: integer, example: 120 }
-
-    Partida:
+    PartidaMinijuego:
       type: object
       properties:
-        idPartida: { type: integer, readOnly: true }
-        idMinijuego: { type: integer }
-        idHijo: { type: integer }
+        fecha: { type: string, format: date }
         puntaje: { type: integer }
-        bonificacion: { type: integer, description: Puntos extra otorgados al hijo por la partida, example: 10 }
-        fecha: { type: string, format: date-time, readOnly: true }
-
-    Progreso:
-      type: object
-      properties:
-        idHijo: { type: integer }
-        puntosActuales: { type: integer }
-        nivel: { $ref: '#/components/schemas/Nivel' }
-        tareas:
-          type: object
-          properties:
-            pendientes: { type: integer }
-            enRevision: { type: integer }
-            aprobadas: { type: integer }
-            rechazadas: { type: integer }
-        insignias:
-          type: array
-          items: { $ref: '#/components/schemas/InsigniaObtenida' }
+        bonificacion: { type: integer }
